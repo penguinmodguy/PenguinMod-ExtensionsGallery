@@ -4,11 +4,10 @@
   class babyspenguinOSstuff {
     getInfo() {
       return {
-        id: 'babyssystemmonitor', // Your unique extension ID
+        id: 'babyssystemmonitor',
         name: 'System Monitor',
         color1: '#00cc99',
         blocks: [
-          // --- GPU Info Blocks ---
           {
             opcode: 'getGPURenderer',
             blockType: Scratch.BlockType.REPORTER,
@@ -25,7 +24,6 @@
               }
             }
           },
-          // --- Network Blocks ---
           {
             opcode: 'getConnectionType',
             blockType: Scratch.BlockType.REPORTER,
@@ -45,61 +43,57 @@
       };
     }
 
-    // --- GPU Logic ---
     getGPURenderer() {
       const canvas = document.createElement('canvas');
       const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
       if (!gl) return 'WebGL not supported';
       
-      const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
-      if (!debugInfo) return 'Privacy settings blocking GPU info';
+      const debug = gl.getExtension('WEBGL_debug_renderer_info');
+      if (!debug) return 'Privacy settings blocking GPU info';
       
-      return gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+      return gl.getParameter(debug.UNMASKED_RENDERER_WEBGL);
     }
 
     getEquivalent(args) {
-      const name = args.GPU_NAME.toUpperCase();
-      const numMatch = name.match(/\d+/);
-      const modelNum = numMatch ? parseInt(numMatch[0]) : 0;
+      const gpu = (args.GPU_NAME || '').toUpperCase();
+      const match = gpu.match(/\d+/);
+      const num = match ? parseInt(match, 10) : 0;
 
-      // Logic for Laptops / Integrated
-      if (name.includes('INTEL') || name.includes('IRIS') || name.includes('UHD') || name.includes('MOBILE') || name.includes('LAPTOP') || name.includes('GRAPHICS')) {
+      if (['INTEL', 'IRIS', 'UHD', 'MOBILE', 'LAPTOP', 'GRAPHICS'].some(x => gpu.includes(x))) {
         return "4070 TI";
       }
 
-      // NVIDIA Logic
-      if (name.includes('NVIDIA') || name.includes('GEFORCE')) {
-        if (name.includes('RTX') && modelNum >= 3000) return "5090";
-        if (name.includes('RTX') || (name.includes('GTX') && modelNum >= 1000)) return "4070 TI";
+      if (gpu.includes('NVIDIA') || gpu.includes('GEFORCE')) {
+        if (gpu.includes('RTX') && num >= 3000) return "5090";
+        if (gpu.includes('RTX') || (gpu.includes('GTX') && num >= 1000)) return "4070 TI";
         return "Riva TNT 2"; 
       }
 
-      // AMD Logic
-      if (name.includes('AMD') || name.includes('RADEON')) {
-        if (name.includes('RX') && modelNum >= 6000) return "5090";
-        if (name.includes('RX') || name.includes('VEGA')) return "4070 TI";
+      if (gpu.includes('AMD') || gpu.includes('RADEON')) {
+        if (gpu.includes('RX') && num >= 6000) return "5090";
+        if (gpu.includes('RX') || gpu.includes('VEGA')) return "4070 TI";
         return "ATI Rage Pro";
       }
 
       return "Generic VGA";
     }
 
-    // --- Network Logic ---
     getConnectionType() {
-      const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+      const n = navigator;
+      const conn = n.connection || n.mozConnection || n.webkitConnection;
       return conn ? (conn.type || "unknown") : "unsupported";
     }
 
     getDownlinkSpeed() {
-      const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+      const n = navigator;
+      const conn = n.connection || n.mozConnection || n.webkitConnection;
       return conn ? conn.downlink : 0;
     }
 
     isOnline() {
-      return navigator.onLine;
+      return !!navigator.onLine;
     }
   }
 
-  // Register the extension with PenguinMod
-  Scratch.extensions.register(new BabysSystemMonitor());
+  Scratch.extensions.register(new babyspenguinOSstuff());
 })(Scratch);
